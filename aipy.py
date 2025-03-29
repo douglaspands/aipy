@@ -161,7 +161,6 @@ def main():
         metavar="MODEL_NAME",
         nargs=1,
         type=str,
-        choices=MODELS_CHOICE,
         help=f"model's name with tag (ex.: {pull_help})",
     )
 
@@ -200,12 +199,10 @@ def main():
         type=str,
         const=MODEL_DEFAULT,
         default=MODEL_DEFAULT,
-        choices=MODELS_CHOICE,
         help=f"initialize chat of the {AI_CORE} (default: '{MODEL_DEFAULT}')",
     )
 
     args = parser.parse_args().__dict__
-    # print(f"{args=}")
     match args["subcommand"]:
         case "version":
             print(f"{APP_NAME}-v{APP_VERSION} {exmsg}")

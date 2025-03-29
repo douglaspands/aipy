@@ -51,11 +51,11 @@ Abaixo citarei modelos mais robustos que rodam somente em GPU e outros modelos q
 - `gemma3:4b`
 - `llama3.1:8b`
 - `qwen2.5:7b`
-- `qwen2.5-coder:3b`
+- `qwen2.5-coder:3b-base`
 
 #### Maquina sem GPU
 - `gemma3:1b`
 - `llama3.2:1b`
 - `llama3.2:3b`
 - `qwen2.5:3b`
-- `qwen2.5-coder:1.5b`
+- `qwen2.5-coder:1.5b-base`
