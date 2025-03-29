@@ -114,24 +114,33 @@ def main():
         description=f"start/stop {AI_CORE}",
     )
 
-    run_parser.add_argument(
-        "run_switch",
-        choices=["start", "stop"],
-        default="start",
-        help=f"initialize or stopped the {AI_CORE}",
+    run_switch_parser = run_parser.add_subparsers(dest="switch", required=True)
+
+    run_switch_start_parser = run_switch_parser.add_parser(
+        "start",
+        help=f"start {AI_CORE}",
+        description=f"start {AI_CORE}",
     )
-    run_parser.add_argument(
+
+    run_switch_start_parser.add_argument(
         "--with-webui",
+        "-ww",
         action="store_true",
         default=False,
-        help=f"running {AI_GUI} gui of the {AI_CORE}",
+        help=f"start {AI_GUI} gui server ({AI_CORE} running is required)",
     )
-    run_parser.add_argument(
-        "-o",
+    run_switch_start_parser.add_argument(
         "--open",
+        "-o",
         action="store_true",
         default=False,
-        help=f"open page {AI_GUI} in browser after initialize the {AI_CORE} (only --with-webui)",
+        help=f"open page {AI_GUI} in browser (--with-webui before is required)",
+    )
+
+    run_switch_parser.add_parser(
+        "stop",
+        help=f"stop {AI_CORE}",
+        description=f"stop {AI_CORE}",
     )
 
     subparsers.add_parser(
@@ -191,7 +200,7 @@ def main():
         case "version":
             print(f"{APP_NAME}-v{APP_VERSION} {exmsg}")
         case "run":
-            if args["run_switch"] == "stop":
+            if args["switch"] == "stop":
                 shell_run(APP_CMD_RUN_STOP)
             else:
                 if args["with_webui"] is True:
