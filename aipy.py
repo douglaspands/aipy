@@ -167,7 +167,7 @@ def main():
     )
     list_parser.add_argument(
         "source",
-        nargs="?",
+        nargs=1,
         type=str,
         choices=["local", "remote"],
         default="local",

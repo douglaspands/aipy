@@ -23,8 +23,37 @@ positional arguments:
     pull                pull model (ollama running is required)
     list                list model (ollama running is required)
     open-webui          open webui (ollama running is required)
-    chat                ollama's chat (depends ollama running)
+    chat                ollama's chat (ollama running is required)
 
 options:
   -h, --help            show this help message and exit
 ```
+
+Para inicializar o Ollama e o WebUI, execute o comando:
+```sh
+python iapy.py run start --with-webui --open
+```
+> Após a inicialização, será aberto no navegador para uso da interface WebUI. Tambem é possivel acessar usando o endereço: [http://localhost:8080](http://localhost:8080).
+
+## Recomendações de modelos
+Para instalar um modelo, recomendo acessar o site [Ollama's Model](https://ollama.com/search) e pesquisar que mais interesse.
+Para baixar um modelo, execute o comando:
+```sh
+python aipy.py pull gemma3:1b
+```
+> `gemma3:1b` é um modelo bom e compativel com muitos hardwares.
+
+Abaixo citarei modelos mais robustos que rodam somente em GPU e outros modelos que rodam em maquinas sem GPU.
+
+#### Maquina com GPU
+- `gemma3:4b`
+- `llama3.1:8b`
+- `qwen2.5:7b`
+- `qwen2.5-coder:3b`
+
+#### Maquina sem GPU
+- `gemma3:1b`
+- `llama3.2:1b`
+- `llama3.2:3b`
+- `qwen2.5:3b`
+- `qwen2.5-coder:1.5b`
