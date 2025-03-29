@@ -16,10 +16,9 @@ with open(Path(__file__).parent.joinpath("pyproject.toml"), "rb") as file:
     pyproject = tomllib.load(file)
 
 try:
-    with open("/proc/driver/nvidia/version") as f:
-        pass
+    subprocess.check_output("nvidia-smi")
     NVIDIA_GPU = True
-except FileNotFoundError:
+except BaseException:
     NVIDIA_GPU = False
 
 APP_NAME = pyproject["project"]["name"]
