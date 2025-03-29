@@ -1,5 +1,4 @@
 #! /usr/bin/python3
-"""Support tools for Ollama"""
 
 import argparse
 import os
@@ -54,6 +53,7 @@ APP_CMD_RUN_API_ONLY = f"{APP_CMD_RUN_START} {AI_CORE}"
 APP_CMD_RUN_WEBUI = f"{APP_CMD_RUN_START} {AI_GUI}"
 APP_CMD_UPDATE = f"{DOCKER_COMPOSE_INIT} pull"
 APP_CMD_PULL = f"{DOCKER_COMPOSE_EXEC} ollama pull " + "{model}"
+APP_CMD_RM = f"{DOCKER_COMPOSE_EXEC} ollama rm " + "{model}"
 CMD_OPEN = (
     "powershell.exe -c 'start {}'"
     if (platform.system() == "Windows" or os.getenv("WSL_DISTRO_NAME"))
@@ -146,8 +146,8 @@ def main():
 
     subparsers.add_parser(
         "update",
-        help=f"update {AI_CORE}",
-        description=f"update {AI_CORE}",
+        help=f"update {AI_CORE} and {AI_GUI}",
+        description=f"update {AI_CORE} and {AI_GUI}",
     )
 
     pull_parser = subparsers.add_parser(
@@ -155,13 +155,29 @@ def main():
         help=f"pull model ({AI_CORE} running is required)",
         description=f"Pull model ({AI_CORE} running is required)",
     )
+
     pull_help = ", ".join([f"'{m}'" for m in MODELS_CHOICE])
     pull_parser.add_argument(
         "model_name",
         metavar="MODEL_NAME",
-        nargs=1,
+        nargs="+",
         type=str,
         help=f"model's name with tag (ex.: {pull_help})",
+    )
+
+    rm_parser = subparsers.add_parser(
+        "rm",
+        help=f"remove model ({AI_CORE} running is required)",
+        description=f"Remove model ({AI_CORE} running is required)",
+    )
+
+    rm_help = ", ".join([f"'{m}'" for m in MODELS_CHOICE])
+    rm_parser.add_argument(
+        "model_name",
+        metavar="MODEL_NAME",
+        nargs="+",
+        type=str,
+        help=f"model's name with tag (ex.: {rm_help})",
     )
 
     list_parser = subparsers.add_parser(
@@ -169,6 +185,7 @@ def main():
         help=f"list model ({AI_CORE} running is required)",
         description=f"list model ({AI_CORE} running is required)",
     )
+
     list_parser.add_argument(
         "source",
         metavar="SOURCE",
@@ -223,8 +240,11 @@ def main():
         case "update":
             shell_run(APP_CMD_UPDATE)
         case "pull":
-            model = args.get("model_name", MODEL_DEFAULT)
-            shell_run(APP_CMD_PULL.format(model=model))
+            for model in args.get("model_name") or []:
+                shell_run(APP_CMD_PULL.format(model=model))
+        case "rm":
+            for model in args.get("model_name") or []:
+                shell_run(APP_CMD_RM.format(model=model))
         case "list":
             if args.get("source", "local") == "remote":
                 shell_run(APP_CMD_LIST_REMOTE)

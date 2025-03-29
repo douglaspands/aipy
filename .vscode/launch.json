@@ -11,8 +11,9 @@
         //     "program": "aipy.py",
         //     "console": "integratedTerminal",
         //     "args": [
-        //         "pull",
-        //         "qwen2.5-coder:1.5b"
+        //         "rm",
+        //         "qwen2.5-coder:1.5b-base",
+        //         "qwen2.5-coder:3b-base"
         //     ]
         // }
     ]

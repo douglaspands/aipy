@@ -1,6 +1,6 @@
 [project]
 name = "aipy"
-version = "2.9.4"
+version = "2.10.0"
 description = "ollama's support tools"
 authors = [
     {name = "Douglas Panhota",email = "douglaspands@gmail.com"}
