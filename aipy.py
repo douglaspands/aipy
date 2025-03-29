@@ -26,6 +26,7 @@ APP_NAME = pyproject["project"]["name"]
 APP_DESCRIPTION = pyproject["project"]["description"]
 APP_VERSION = pyproject["project"]["version"]
 AI_CORE = "ollama"
+AI_GUI = "open-webui"
 MODELS_CHOICE = [
     "gemma3:1b",
     "gemma3:4b",
@@ -46,12 +47,12 @@ DOCKER_COMPOSE_DEFAULT = (
     DOCKER_COMPOSE_CHOICES[1] if NVIDIA_GPU else DOCKER_COMPOSE_CHOICES[0]
 )
 DOCKER_COMPOSE_INIT = f"docker compose -f {DOCKER_COMPOSE_DEFAULT}"
-DOCKER_COMPOSE_EXEC = f"{DOCKER_COMPOSE_INIT} exec ollama"
+DOCKER_COMPOSE_EXEC = f"{DOCKER_COMPOSE_INIT} exec {AI_CORE}"
 APP_CMD_RUN_START = f"{DOCKER_COMPOSE_INIT} up"
 APP_CMD_RUN_STOP = f"{DOCKER_COMPOSE_INIT} stop"
 APP_CMD_RUN_CHAT = f"{DOCKER_COMPOSE_EXEC} ollama run " + "{model}"
-APP_CMD_RUN_API_ONLY = f"{APP_CMD_RUN_START} ollama"
-APP_CMD_RUN_WEBUI = f"{APP_CMD_RUN_START} open-webui"
+APP_CMD_RUN_API_ONLY = f"{APP_CMD_RUN_START} {AI_CORE}"
+APP_CMD_RUN_WEBUI = f"{APP_CMD_RUN_START} {AI_GUI}"
 APP_CMD_UPDATE = f"{DOCKER_COMPOSE_INIT} pull"
 APP_CMD_PULL = f"{DOCKER_COMPOSE_EXEC} ollama pull " + "{model}"
 CMD_OPEN = (
@@ -61,8 +62,8 @@ CMD_OPEN = (
 )
 APP_CMD_OPEN_WEBUI = CMD_OPEN.format(shlex.quote("http://localhost:8080"))
 APP_CMD_OPEN_WEBUI_TIMER = 10.001
-APP_CMD_LIST_LOCAL = "docker exec -it ollama ollama list"
-APP_CMD_LIST_REMOTE = "docker exec -it ollama ollama list all models"
+APP_CMD_LIST_LOCAL = f"{DOCKER_COMPOSE_EXEC} ollama list"
+APP_CMD_LIST_REMOTE = f"{DOCKER_COMPOSE_EXEC} ollama list all models"
 
 
 def shell_run(command: str | list[str]):
@@ -89,11 +90,14 @@ def timer_run(command: str | list[str], ttl: int | float):
 
 
 def main():
-    extras = f"[gpu={'on' if NVIDIA_GPU else 'off'}]"
+    extras = []
+    if NVIDIA_GPU:
+        extras.append("gpu=on")
+    exmsg = ("[" + ",".join(extras) + "]") if extras else ""
 
     parser = argparse.ArgumentParser(
         prog=APP_NAME,
-        description=f"{APP_NAME} - {APP_DESCRIPTION} (docker is required) {extras}",
+        description=f"{APP_NAME} - {APP_DESCRIPTION} (docker is required) {exmsg}",
     )
 
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
@@ -120,14 +124,14 @@ def main():
         "--with-webui",
         action="store_true",
         default=False,
-        help=f"running webui gui of the {AI_CORE}",
+        help=f"running {AI_GUI} gui of the {AI_CORE}",
     )
     run_parser.add_argument(
-        "-og",
-        "--open-webui",
+        "-o",
+        "--open",
         action="store_true",
         default=False,
-        help=f"open page webui in browser after initialize the {AI_CORE} (only --with-webui)",
+        help=f"open page {AI_GUI} in browser after initialize the {AI_CORE} (only --with-webui)",
     )
 
     subparsers.add_parser(
@@ -163,14 +167,14 @@ def main():
 
     subparsers.add_parser(
         "open-webui",
-        help=f"open webui ({AI_CORE} running is required)",
-        description=f"open webui ({AI_CORE} running is required)",
+        help=f"open {AI_GUI} ({AI_CORE} running is required)",
+        description=f"open {AI_GUI} ({AI_CORE} running is required)",
     )
 
     chat_parser = subparsers.add_parser(
         "chat",
-        help=f"{AI_CORE}'s chat (depends ollama running)",
-        description=f"{AI_CORE}'s chat (depends ollama running)",
+        help=f"{AI_CORE}'s chat ({AI_CORE} running is required)",
+        description=f"{AI_CORE}'s chat ({AI_CORE} running is required)",
     )
 
     chat_parser.add_argument(
@@ -183,10 +187,9 @@ def main():
     )
 
     args = parser.parse_args().__dict__
-    # print(args)
     match args["subcommand"]:
         case "version":
-            print(f"{APP_NAME}-v{APP_VERSION} {extras}")
+            print(f"{APP_NAME}-v{APP_VERSION} {exmsg}")
         case "run":
             if args["run_switch"] == "stop":
                 shell_run(APP_CMD_RUN_STOP)
@@ -218,6 +221,7 @@ def main():
             ).start()
             shell_run(APP_CMD_RUN_WEBUI)
         case "chat":
+            print(f"> set model: {args['model_name']} {exmsg}")
             shell_run(APP_CMD_RUN_CHAT.format(model=args["model_name"]))
 
 
