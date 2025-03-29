@@ -35,8 +35,8 @@ MODELS_CHOICE = [
     "qwen2.5:1.5b",
     "qwen2.5:3b",
     "qwen2.5:7b",
-    "qwen2.5-coder:1.5b",
-    "qwen2.5-coder:3b",
+    "qwen2.5-coder:1.5b-base",
+    "qwen2.5-coder:3b-base",
 ]
 MODEL_DEFAULT = list(
     filter(lambda m: m == ("qwen2.5:7b" if NVIDIA_GPU else "qwen2.5:3b"), MODELS_CHOICE)
@@ -113,22 +113,24 @@ def main():
         description=f"start/stop {AI_CORE}",
     )
 
-    run_switch_parser = run_parser.add_subparsers(dest="switch", required=True)
+    run_toggle_parser = run_parser.add_subparsers(
+        dest="toggle", help=f"start/stop {AI_CORE}", description=f"start/stop {AI_CORE}"
+    )
 
-    run_switch_start_parser = run_switch_parser.add_parser(
+    run_toggle_start_parser = run_toggle_parser.add_parser(
         "start",
         help=f"start {AI_CORE}",
         description=f"start {AI_CORE}",
     )
 
-    run_switch_start_parser.add_argument(
+    run_toggle_start_parser.add_argument(
         "--with-webui",
         "-ww",
         action="store_true",
         default=False,
         help=f"start {AI_GUI} gui server ({AI_CORE} running is required)",
     )
-    run_switch_start_parser.add_argument(
+    run_toggle_start_parser.add_argument(
         "--open",
         "-o",
         action="store_true",
@@ -136,7 +138,7 @@ def main():
         help=f"open page {AI_GUI} in browser (--with-webui before is required)",
     )
 
-    run_switch_parser.add_parser(
+    run_toggle_parser.add_parser(
         "stop",
         help=f"stop {AI_CORE}",
         description=f"stop {AI_CORE}",
@@ -156,6 +158,10 @@ def main():
     pull_help = ", ".join([f"'{m}'" for m in MODELS_CHOICE])
     pull_parser.add_argument(
         "model_name",
+        metavar="MODEL_NAME",
+        nargs=1,
+        type=str,
+        choices=MODELS_CHOICE,
         help=f"model's name with tag (ex.: {pull_help})",
     )
 
@@ -166,9 +172,11 @@ def main():
     )
     list_parser.add_argument(
         "source",
-        nargs=1,
+        metavar="SOURCE",
+        nargs="?",
         type=str,
         choices=["local", "remote"],
+        const="local",
         default="local",
         help=f"source of models for {AI_CORE}",
     )
@@ -187,23 +195,26 @@ def main():
 
     chat_parser.add_argument(
         "model_name",
+        metavar="MODEL_NAME",
         nargs="?",
         type=str,
+        const=MODEL_DEFAULT,
         default=MODEL_DEFAULT,
         choices=MODELS_CHOICE,
         help=f"initialize chat of the {AI_CORE} (default: '{MODEL_DEFAULT}')",
     )
 
     args = parser.parse_args().__dict__
+    # print(f"{args=}")
     match args["subcommand"]:
         case "version":
             print(f"{APP_NAME}-v{APP_VERSION} {exmsg}")
         case "run":
-            if args["switch"] == "stop":
+            if args["toggle"] == "stop":
                 shell_run(APP_CMD_RUN_STOP)
             else:
-                if args["with_webui"] is True:
-                    if args["open"] is True:
+                if args.get("with_webui", False) is True:
+                    if args.get("open", False) is True:
                         Thread(
                             target=timer_run,
                             args=(APP_CMD_OPEN_WEBUI, APP_CMD_OPEN_WEBUI_TIMER),
@@ -215,12 +226,13 @@ def main():
         case "update":
             shell_run(APP_CMD_UPDATE)
         case "pull":
-            shell_run(APP_CMD_PULL.format(model=args["model_name"]))
+            model = args.get("model_name", MODEL_DEFAULT)
+            shell_run(APP_CMD_PULL.format(model=model))
         case "list":
-            if args["source"] == "local":
-                shell_run(APP_CMD_LIST_LOCAL)
-            else:
+            if args.get("source", "local") == "remote":
                 shell_run(APP_CMD_LIST_REMOTE)
+            else:
+                shell_run(APP_CMD_LIST_LOCAL)
         case "open_webui":
             Thread(
                 target=timer_run,
@@ -229,8 +241,9 @@ def main():
             ).start()
             shell_run(APP_CMD_RUN_WEBUI)
         case "chat":
-            print(f"> set model: {args['model_name']} {exmsg}")
-            shell_run(APP_CMD_RUN_CHAT.format(model=args["model_name"]))
+            model = args.get("model_name", MODEL_DEFAULT)
+            print(f"> set model: {model} {exmsg}")
+            shell_run(APP_CMD_RUN_CHAT.format(model=model))
 
 
 if __name__ == "__main__":
