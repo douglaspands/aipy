@@ -34,6 +34,8 @@ Para inicializar o Ollama e o WebUI, execute o comando:
 python iapy.py run start --with-webui --open
 ```
 > Após a inicialização, será aberto no navegador para uso da interface WebUI. Tambem é possivel acessar usando o endereço: [http://localhost:8080](http://localhost:8080).
+   
+> O terminal fica preso para que sejá possivel finalizar os processo apenas encerrando o terminal. Então, para executar os proximos passos é necessario abrir outro terminal.
 
 ## Recomendações de modelos
 Para instalar um modelo, recomendo acessar o site [Ollama's Model](https://ollama.com/search) e pesquisar que mais interesse.
