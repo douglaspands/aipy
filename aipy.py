@@ -15,14 +15,36 @@ from threading import Thread
 with open(Path(__file__).parent.joinpath("pyproject.toml"), "rb") as file:
     pyproject = tomllib.load(file)
 
+try:
+    with open("/proc/driver/nvidia/version") as f:
+        pass
+    NVIDIA_GPU = True
+except FileNotFoundError:
+    NVIDIA_GPU = False
+
 APP_NAME = pyproject["project"]["name"]
 APP_DESCRIPTION = pyproject["project"]["description"]
 APP_VERSION = pyproject["project"]["version"]
 AI_CORE = "ollama"
-MODELS_CHOICE = ["gemma3:1b", "qwen2.5:1.5b", "qwen2.5:3b"]
-MODEL_DEFAULT = MODELS_CHOICE[2]  # "qwen2.5:3b"
+MODELS_CHOICE = [
+    "gemma3:1b",
+    "gemma3:4b",
+    "llama3.1:8b",
+    "llama3.2:1b",
+    "llama3.2:3b",
+    "qwen2.5:1.5b",
+    "qwen2.5:3b",
+    "qwen2.5:7b",
+    "qwen2.5-coder:1.5b",
+    "qwen2.5-coder:3b",
+]
+MODEL_DEFAULT = list(
+    filter(lambda m: m == ("qwen2.5:7b" if NVIDIA_GPU else "qwen2.5:3b"), MODELS_CHOICE)
+)[0]
 DOCKER_COMPOSE_CHOICES = ["docker-compose.cpu.yaml", "docker-compose.gpu.yaml"]
-DOCKER_COMPOSE_DEFAULT = DOCKER_COMPOSE_CHOICES[0]  # cpu
+DOCKER_COMPOSE_DEFAULT = (
+    DOCKER_COMPOSE_CHOICES[1] if NVIDIA_GPU else DOCKER_COMPOSE_CHOICES[0]
+)
 DOCKER_COMPOSE_INIT = f"docker compose -f {DOCKER_COMPOSE_DEFAULT}"
 DOCKER_COMPOSE_EXEC = f"{DOCKER_COMPOSE_INIT} exec ollama"
 APP_CMD_RUN_START = f"{DOCKER_COMPOSE_INIT} up"
@@ -67,9 +89,11 @@ def timer_run(command: str | list[str], ttl: int | float):
 
 
 def main():
+    extras = f"[gpu={'on' if NVIDIA_GPU else 'off'}]"
+
     parser = argparse.ArgumentParser(
         prog=APP_NAME,
-        description=f"{APP_NAME} - {APP_DESCRIPTION} (docker is required)",
+        description=f"{APP_NAME} - {APP_DESCRIPTION} (docker is required) {extras}",
     )
 
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
@@ -162,7 +186,7 @@ def main():
     # print(args)
     match args["subcommand"]:
         case "version":
-            print(f"{APP_NAME}-v{APP_VERSION}")
+            print(f"{APP_NAME}-v{APP_VERSION} {extras}")
         case "run":
             if args["run_switch"] == "stop":
                 shell_run(APP_CMD_RUN_STOP)
