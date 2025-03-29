@@ -8,13 +8,12 @@ import shlex
 import subprocess
 import sys
 import time
+import tomllib
 from pathlib import Path
 from threading import Thread
 
-import toml
-
 with open(Path(__file__).parent.joinpath("pyproject.toml"), "rb") as file:
-    pyproject = toml.load(file)
+    pyproject = tomllib.load(file)
 
 APP_NAME = pyproject["project"]["name"]
 APP_DESCRIPTION = pyproject["project"]["description"]
