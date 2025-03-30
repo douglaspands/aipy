@@ -1,14 +1,11 @@
 [project]
 name = "aipy"
-version = "2.12.4"
+version = "2.13.0"
 description = "ollama's support tools"
-authors = [
-    {name = "Douglas Panhota",email = "douglaspands@gmail.com"}
-]
+authors = [{ name = "Douglas Panhota", email = "douglaspands@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-dependencies = [
-]
+dependencies = []
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.2"

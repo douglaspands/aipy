@@ -66,6 +66,7 @@ APP_CMD_OPEN_WEBUI = CMD_OPEN.format(shlex.quote(WEBUI_URL))
 APP_CMD_LIST_LOCAL = f"{DOCKER_COMPOSE_EXEC} ollama list"
 APP_CMD_LIST_REMOTE = f"{DOCKER_COMPOSE_EXEC} ollama list all models"
 USER_WAIT_TIME = 2.5
+USER_RETRY = 8
 
 
 def shell_run(
@@ -101,16 +102,24 @@ def shell_run(
         pass
 
 
-def browser_open_url():
+def browser_open_url() -> int:
+    count = 0
     while True:
+        if not (count < USER_RETRY):
+            print(
+                f"the limit of {USER_RETRY} attempts has been exceeded, probably the {AI_GUI} server is not running"
+            )
+            return 1
         try:
             with urllib.request.urlopen(WEBUI_URL) as response:
                 if response.getcode() == 200:
                     break
         except BaseException:
             pass
-        time.sleep(2.0)
+        count += 1
+        time.sleep(USER_WAIT_TIME)
     shell_run(APP_CMD_OPEN_WEBUI)
+    return 0
 
 
 @cache
@@ -135,7 +144,7 @@ def docker_is_running() -> bool:
     return docker_is_enable is True and compose_is_enable is True
 
 
-def main():
+def main() -> int | None:
     extras = []
     if NVIDIA_GPU:
         extras.append("gpu=on")
@@ -252,10 +261,18 @@ def main():
         help=f"source of models for {AI_CORE}",
     )
 
-    subparsers.add_parser(
+    open_webui_parser = subparsers.add_parser(
         "open-webui",
         help=f"open {AI_GUI}{ollama_running_help}",
         description=f"open {AI_GUI}{ollama_running_help}",
+    )
+
+    open_webui_parser.add_argument(
+        "--with-webui",
+        "-ww",
+        action="store_true",
+        default=False,
+        help=f"start {AI_GUI} gui server{ollama_running_help}",
     )
 
     chat_parser = subparsers.add_parser(
@@ -306,7 +323,14 @@ def main():
             else:
                 shell_run(APP_CMD_LIST_LOCAL)
         case "open-webui":
-            browser_open_url()
+            if args.get("with_webui", False) is True:
+                Thread(
+                    target=browser_open_url,
+                    daemon=True,
+                ).start()
+                shell_run(APP_CMD_RUN_WEBUI)
+            else:
+                return browser_open_url()
         case "chat":
             for model in args.get("model_name") or []:
                 print(f"> set model: {model}{extras_help}")
@@ -316,7 +340,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    finally:
-        sys.exit()
+    sys.exit(main())
