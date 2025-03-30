@@ -101,16 +101,6 @@ def shell_run(
         pass
 
 
-def check_url_available(url):
-    try:
-        with urllib.request.urlopen(url) as response:
-            if response.getcode() == 200:
-                return True
-    except BaseException:
-        pass
-    return False
-
-
 def browser_open_url():
     while True:
         try:
