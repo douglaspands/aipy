@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import tomllib
+import urllib.request
 from functools import cache
 from pathlib import Path
 from threading import Thread
@@ -52,7 +53,7 @@ APP_CMD_RUN_STOP = f"{DOCKER_COMPOSE_INIT} stop"
 APP_CMD_RUN_CHAT = f"{DOCKER_COMPOSE_EXEC} ollama run " + "{model}"
 APP_CMD_RUN_API_ONLY = f"{APP_CMD_RUN_START} {AI_CORE}"
 APP_CMD_RUN_WEBUI = f"{APP_CMD_RUN_START} {AI_GUI}"
-APP_CMD_UPDATE = f"{DOCKER_COMPOSE_INIT} pull"
+APP_CMD_UPGRADE = f"{DOCKER_COMPOSE_INIT} pull"
 APP_CMD_PULL = f"{DOCKER_COMPOSE_EXEC} ollama pull " + "{model}"
 APP_CMD_RM = f"{DOCKER_COMPOSE_EXEC} ollama rm " + "{model}"
 CMD_OPEN = (
@@ -60,10 +61,11 @@ CMD_OPEN = (
     if (platform.system() == "Windows" or os.getenv("WSL_DISTRO_NAME"))
     else "sh -c 'xdg-open {}'"
 )
-APP_CMD_OPEN_WEBUI = CMD_OPEN.format(shlex.quote("http://localhost:8080"))
-APP_CMD_OPEN_WEBUI_TIMER = 10.001
+WEBUI_URL = "http://localhost:8080"
+APP_CMD_OPEN_WEBUI = CMD_OPEN.format(shlex.quote(WEBUI_URL))
 APP_CMD_LIST_LOCAL = f"{DOCKER_COMPOSE_EXEC} ollama list"
 APP_CMD_LIST_REMOTE = f"{DOCKER_COMPOSE_EXEC} ollama list all models"
+USER_WAIT_TIME = 2.5
 
 
 def shell_run(
@@ -99,9 +101,26 @@ def shell_run(
         pass
 
 
-def timer_run(command: str | list[str], ttl: int | float):
-    time.sleep(ttl)
-    shell_run(command)
+def check_url_available(url):
+    try:
+        with urllib.request.urlopen(url) as response:
+            if response.getcode() == 200:
+                return True
+    except BaseException:
+        pass
+    return False
+
+
+def browser_open_url():
+    while True:
+        try:
+            with urllib.request.urlopen(WEBUI_URL) as response:
+                if response.getcode() == 200:
+                    break
+        except BaseException:
+            pass
+        time.sleep(2.0)
+    shell_run(APP_CMD_OPEN_WEBUI)
 
 
 @cache
@@ -192,9 +211,9 @@ def main():
     )
 
     subparsers.add_parser(
-        "update",
-        help=f"update {AI_CORE} and {AI_GUI}",
-        description=f"update {AI_CORE} and {AI_GUI}",
+        "upgrade",
+        help=f"upgrade {AI_CORE} and {AI_GUI}",
+        description=f"upgrade {AI_CORE} and {AI_GUI}",
     )
 
     pull_parser = subparsers.add_parser(
@@ -272,18 +291,19 @@ def main():
             if args["toggle"] == "stop":
                 shell_run(APP_CMD_RUN_STOP)
             else:
+                print(f"> gpu mode: {'on' if NVIDIA_GPU else 'off'}")
+                time.sleep(USER_WAIT_TIME)
                 if args.get("with_webui", False) is True:
                     if args.get("open", False) is True:
                         Thread(
-                            target=timer_run,
-                            args=(APP_CMD_OPEN_WEBUI, APP_CMD_OPEN_WEBUI_TIMER),
+                            target=browser_open_url,
                             daemon=True,
                         ).start()
                     shell_run(APP_CMD_RUN_START)
                 else:
                     shell_run(APP_CMD_RUN_API_ONLY)
-        case "update":
-            shell_run(APP_CMD_UPDATE)
+        case "upgrade":
+            shell_run(APP_CMD_UPGRADE)
         case "pull":
             for model in args.get("model_name") or []:
                 shell_run(APP_CMD_PULL.format(model=model))
@@ -297,14 +317,14 @@ def main():
                 shell_run(APP_CMD_LIST_LOCAL)
         case "open_webui":
             Thread(
-                target=timer_run,
-                args=(APP_CMD_OPEN_WEBUI, APP_CMD_OPEN_WEBUI_TIMER),
+                target=browser_open_url,
                 daemon=True,
             ).start()
             shell_run(APP_CMD_RUN_WEBUI)
         case "chat":
             for model in args.get("model_name") or []:
                 print(f"> set model: {model}{extras_help}")
+                time.sleep(USER_WAIT_TIME)
                 shell_run(APP_CMD_RUN_CHAT.format(model=model))
                 break
 

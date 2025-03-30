@@ -11,31 +11,37 @@ CLI de apoio para uso do Ollama.
 python aipy.py --help
 
 # output
-usage: aipy [-h] {version,run,update,pull,list,open-webui,chat} ...
+usage: aipy [-h] {version,run,upgrade,pull,rm,list,open-webui,chat} ...
 
-aipy - ollama's support tools (docker is required)
+aipy - ollama's support tools
 
 positional arguments:
-  {version,run,update,pull,list,open-webui,chat}
+  {version,run,upgrade,pull,rm,list,open-webui,chat}
     version             show aipy version
     run                 start/stop ollama
-    update              update ollama
-    pull                pull model (ollama running is required)
-    list                list model (ollama running is required)
-    open-webui          open webui (ollama running is required)
-    chat                ollama's chat (ollama running is required)
+    upgrade             upgrade ollama and open-webui
+    pull                pull model
+    rm                  remove model
+    list                list model
+    open-webui          open open-webui
+    chat                ollama's chat
 
 options:
   -h, --help            show this help message and exit
 ```
+> Pode aparecer a mensagem `(ollama running is required)` na descrição do comando que necessite o `Ollama` rodando e tenha sido identificado que ele não está.
 
 Para inicializar o Ollama e o WebUI, execute o comando:
 ```sh
 python iapy.py run start --with-webui --open
 ```
-> Após a inicialização, será aberto no navegador para uso da interface WebUI. Tambem é possivel acessar usando o endereço: [http://localhost:8080](http://localhost:8080).
+ou a forma abreviada:
+```sh
+python iapy.py run start -ww -o
+```
+> Assim que a inicialização estiver completa, o navegador sera iniciado na pagina do `WebUI`. Tambem é possivel acessar usando o endereço: [http://localhost:8080](http://localhost:8080).
    
-> O terminal fica preso para que sejá possivel finalizar os processo apenas encerrando o terminal. Então, para executar os proximos passos é necessario abrir outro terminal.
+> O terminal ficará preso para facilitar a finalização (basta fechar o terminal). Então, para executar os proximos passos é necessario abrir outro terminal.
 
 ## Recomendações de modelos
 Para instalar um modelo eu recomendo acessar o site [Ollama's Models](https://ollama.com/search) e pesquisar o mais interessante para a sua necessidade (`não existe bala de prata`, então, precisa baixar os modelos e avaliar).
