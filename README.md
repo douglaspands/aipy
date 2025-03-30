@@ -38,7 +38,7 @@ python iapy.py run start --with-webui --open
 > O terminal fica preso para que sejá possivel finalizar os processo apenas encerrando o terminal. Então, para executar os proximos passos é necessario abrir outro terminal.
 
 ## Recomendações de modelos
-Para instalar um modelo, recomendo acessar o site [Ollama's Model](https://ollama.com/search) e pesquisar que mais interesse.
+Para instalar um modelo eu recomendo acessar o site [Ollama's Models](https://ollama.com/search) e pesquisar o mais interessante para a sua necessidade (`não existe bala de prata`, então, precisa baixar os modelos e avaliar).
 Para baixar um modelo, execute o comando:
 ```sh
 python aipy.py pull gemma3:1b
