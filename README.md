@@ -44,7 +44,7 @@ python iapy.py run start -ww -o
 > O terminal ficará preso para facilitar a finalização (basta fechar o terminal). Então, para executar os proximos passos é necessario abrir outro terminal.
 
 ## Recomendações de modelos
-Para instalar um modelo eu recomendo acessar o site [Ollama's Models](https://ollama.com/search) e pesquisar o mais interessante para a sua necessidade (`não existe bala de prata`, então, precisa baixar os modelos e avaliar).
+Para instalar um modelo eu recomendo acessar o site [Ollama's Models](https://ollama.com/search) e pesquisar o mais interessante para a sua necessidade (`não existe bala de prata`, então, precisa baixar os modelos e avaliar).   
 Para baixar um modelo, execute o comando:
 ```sh
 python aipy.py pull gemma3:1b
