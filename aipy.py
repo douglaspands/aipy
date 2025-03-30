@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import tomllib
+from functools import cache
 from pathlib import Path
 from threading import Thread
 
@@ -65,7 +66,9 @@ APP_CMD_LIST_LOCAL = f"{DOCKER_COMPOSE_EXEC} ollama list"
 APP_CMD_LIST_REMOTE = f"{DOCKER_COMPOSE_EXEC} ollama list all models"
 
 
-def shell_run(command: str | list[str]):
+def shell_run(
+    command: str | list[str], capture_output=False
+) -> subprocess.CompletedProcess[str]:
     cmd_prefix = f"cd {Path(__file__).resolve().parent}"
     cmd_system = " && ".join(
         [
@@ -78,7 +81,20 @@ def shell_run(command: str | list[str]):
         ]
     )
     try:
-        subprocess.run(cmd_system, shell=True, check=True)
+        kwargs = {
+            "args": cmd_system,
+            "shell": True,
+            "check": True,
+        }
+        if capture_output:
+            kwargs.update(
+                {
+                    "text": True,
+                    "capture_output": capture_output,
+                    "check": False,
+                }
+            )
+        return subprocess.run(**kwargs)
     except KeyboardInterrupt:
         pass
 
@@ -88,15 +104,46 @@ def timer_run(command: str | list[str], ttl: int | float):
     shell_run(command)
 
 
+@cache
+def get_local_models() -> list[str]:
+    result = shell_run(
+        f"{APP_CMD_LIST_LOCAL} | awk '{{print $1}}'", capture_output=True
+    )
+    models = [m.strip() for m in result.stdout.splitlines()[1:]]
+    return models
+
+
+def ollama_is_running() -> bool:
+    result = shell_run(f"{DOCKER_COMPOSE_EXEC} ollama --version", capture_output=True)
+    return True if result.stdout else False
+
+
+def docker_is_running() -> bool:
+    result = shell_run("docker --version", capture_output=True)
+    docker_is_enable = True if result.stdout else False
+    result = shell_run("docker compose version", capture_output=True)
+    compose_is_enable = True if result.stdout else False
+    return docker_is_enable is True and compose_is_enable is True
+
+
 def main():
     extras = []
     if NVIDIA_GPU:
         extras.append("gpu=on")
-    exmsg = ("[" + ",".join(extras) + "]") if extras else ""
+    extras_help = (" [" + ",".join(extras) + "]") if extras else ""
+    models_help = ", ".join([f"'{m}'" for m in MODELS_CHOICE])
+    local_models_help = ", ".join([f"'{m}'" for m in get_local_models()])
+    ollama_running_help = (
+        "" if ollama_is_running() else f" ({AI_CORE} running is required)"
+    )
+    docker_running_help = "" if docker_is_running() else " (docker is required)"
+    kw_choice = {}
+    if models_installed := get_local_models():
+        kw_choice["choices"] = models_installed
 
     parser = argparse.ArgumentParser(
         prog=APP_NAME,
-        description=f"{APP_NAME} - {APP_DESCRIPTION} (docker is required) {exmsg}",
+        description=f"{APP_NAME} - {APP_DESCRIPTION}{docker_running_help}{extras_help}",
     )
 
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
@@ -128,7 +175,7 @@ def main():
         "-ww",
         action="store_true",
         default=False,
-        help=f"start {AI_GUI} gui server ({AI_CORE} running is required)",
+        help=f"start {AI_GUI} gui server{ollama_running_help}",
     )
     run_toggle_start_parser.add_argument(
         "--open",
@@ -152,38 +199,37 @@ def main():
 
     pull_parser = subparsers.add_parser(
         "pull",
-        help=f"pull model ({AI_CORE} running is required)",
-        description=f"Pull model ({AI_CORE} running is required)",
+        help=f"pull model{ollama_running_help}",
+        description=f"Pull model{ollama_running_help}",
     )
 
-    pull_help = ", ".join([f"'{m}'" for m in MODELS_CHOICE])
     pull_parser.add_argument(
         "model_name",
         metavar="MODEL_NAME",
         nargs="+",
         type=str,
-        help=f"model's name with tag (ex.: {pull_help})",
+        help=f"model's name with tag (ex.: {models_help})",
     )
 
     rm_parser = subparsers.add_parser(
         "rm",
-        help=f"remove model ({AI_CORE} running is required)",
-        description=f"Remove model ({AI_CORE} running is required)",
+        help=f"remove model{ollama_running_help}",
+        description=f"Remove model{ollama_running_help}",
     )
 
-    rm_help = ", ".join([f"'{m}'" for m in MODELS_CHOICE])
     rm_parser.add_argument(
         "model_name",
         metavar="MODEL_NAME",
         nargs="+",
         type=str,
-        help=f"model's name with tag (ex.: {rm_help})",
+        **kw_choice,
+        help=f"model's name with tag{f' (ex.: {local_models_help})' if local_models_help else ''}",
     )
 
     list_parser = subparsers.add_parser(
         "list",
-        help=f"list model ({AI_CORE} running is required)",
-        description=f"list model ({AI_CORE} running is required)",
+        help=f"list model{ollama_running_help}",
+        description=f"list model{ollama_running_help}",
     )
 
     list_parser.add_argument(
@@ -199,30 +245,29 @@ def main():
 
     subparsers.add_parser(
         "open-webui",
-        help=f"open {AI_GUI} ({AI_CORE} running is required)",
-        description=f"open {AI_GUI} ({AI_CORE} running is required)",
+        help=f"open {AI_GUI}{ollama_running_help}",
+        description=f"open {AI_GUI}{ollama_running_help}",
     )
 
     chat_parser = subparsers.add_parser(
         "chat",
-        help=f"{AI_CORE}'s chat ({AI_CORE} running is required)",
-        description=f"{AI_CORE}'s chat ({AI_CORE} running is required)",
+        help=f"{AI_CORE}'s chat{ollama_running_help}",
+        description=f"{AI_CORE}'s chat{ollama_running_help}",
     )
 
     chat_parser.add_argument(
         "model_name",
         metavar="MODEL_NAME",
-        nargs="?",
+        nargs=1,
         type=str,
-        const=MODEL_DEFAULT,
-        default=MODEL_DEFAULT,
-        help=f"initialize chat of the {AI_CORE} (default: '{MODEL_DEFAULT}')",
+        **kw_choice,
+        help=f"initialize chat of the {AI_CORE}{f' (ex.: {local_models_help})' if local_models_help else ''}",
     )
 
     args = parser.parse_args().__dict__
     match args["subcommand"]:
         case "version":
-            print(f"{APP_NAME}-v{APP_VERSION} {exmsg}")
+            print(f"{APP_NAME}-v{APP_VERSION}{extras_help}")
         case "run":
             if args["toggle"] == "stop":
                 shell_run(APP_CMD_RUN_STOP)
@@ -258,9 +303,10 @@ def main():
             ).start()
             shell_run(APP_CMD_RUN_WEBUI)
         case "chat":
-            model = args.get("model_name", MODEL_DEFAULT)
-            print(f"> set model: {model} {exmsg}")
-            shell_run(APP_CMD_RUN_CHAT.format(model=model))
+            for model in args.get("model_name") or []:
+                print(f"> set model: {model}{extras_help}")
+                shell_run(APP_CMD_RUN_CHAT.format(model=model))
+                break
 
 
 if __name__ == "__main__":
