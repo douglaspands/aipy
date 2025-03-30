@@ -305,12 +305,8 @@ def main():
                 shell_run(APP_CMD_LIST_REMOTE)
             else:
                 shell_run(APP_CMD_LIST_LOCAL)
-        case "open_webui":
-            Thread(
-                target=browser_open_url,
-                daemon=True,
-            ).start()
-            shell_run(APP_CMD_RUN_WEBUI)
+        case "open-webui":
+            browser_open_url()
         case "chat":
             for model in args.get("model_name") or []:
                 print(f"> set model: {model}{extras_help}")
