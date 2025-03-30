@@ -66,7 +66,7 @@ APP_CMD_OPEN_WEBUI = CMD_OPEN.format(shlex.quote(WEBUI_URL))
 APP_CMD_LIST_LOCAL = f"{DOCKER_COMPOSE_EXEC} ollama list"
 APP_CMD_LIST_REMOTE = f"{DOCKER_COMPOSE_EXEC} ollama list all models"
 USER_WAIT_TIME = 2.5
-USER_RETRY = 8
+USER_RETRY = 10
 
 
 def shell_run(

@@ -12,7 +12,7 @@ services:
       - ollama-network
 
   open-webui:
-    image: ghcr.io/open-webui/open-webui:latest
+    image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui
     restart: on-failure
     volumes:
@@ -25,6 +25,7 @@ services:
       - 'OLLAMA_BASE_URL=http://ollama:11434'
       - 'WEBUI_SECRET_KEY='
       - 'WEBUI_AUTH=false'
+      # - 'HF_HUB_OFFLINE=1'
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:

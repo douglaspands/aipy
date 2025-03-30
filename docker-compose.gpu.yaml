@@ -20,7 +20,7 @@ services:
                 - gpu
 
   open-webui:
-    image: ghcr.io/open-webui/open-webui:latest
+    image: ghcr.io/open-webui/open-webui:cuda
     container_name: open-webui
     restart: on-failure
     volumes:
@@ -33,10 +33,19 @@ services:
       - 'OLLAMA_BASE_URL=http://ollama:11434'
       - 'WEBUI_SECRET_KEY='
       - 'WEBUI_AUTH=false'
+      # - 'HF_HUB_OFFLINE=1'
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
       - ollama-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
 
 volumes:
   ollama:
