@@ -87,14 +87,12 @@ def shell_run(
         kwargs = {
             "args": cmd_system,
             "shell": True,
-            "check": True,
         }
         if capture_output:
             kwargs.update(
                 {
                     "text": True,
                     "capture_output": capture_output,
-                    "check": False,
                 }
             )
         return subprocess.run(**kwargs)
