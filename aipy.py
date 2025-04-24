@@ -95,6 +95,7 @@ def shell_run(
                     "capture_output": capture_output,
                 }
             )
+        # print(f"shell> {cmd_system}")
         return subprocess.run(**kwargs)
     except KeyboardInterrupt:
         pass
@@ -187,12 +188,21 @@ def main() -> int | None:
     )
 
     run_toggle_start_parser.add_argument(
+        "--daemon",
+        "-d",
+        action="store_true",
+        default=False,
+        help="server in daemon mode",
+    )
+
+    run_toggle_start_parser.add_argument(
         "--with-webui",
         "-ww",
         action="store_true",
         default=False,
         help=f"start {AI_GUI} gui server{ollama_running_help}",
     )
+
     run_toggle_start_parser.add_argument(
         "--open",
         "-o",
@@ -289,6 +299,7 @@ def main() -> int | None:
     )
 
     args = parser.parse_args().__dict__
+    # print(f"{args=}")
     match args["subcommand"]:
         case "version":
             print(f"{APP_NAME}-v{APP_VERSION}{extras_help}")
@@ -304,9 +315,13 @@ def main() -> int | None:
                             target=browser_open_url,
                             daemon=True,
                         ).start()
-                    shell_run(APP_CMD_RUN_START)
+                    shell_run(
+                        APP_CMD_RUN_START + (" -d" if args["daemon"] is True else "")
+                    )
                 else:
-                    shell_run(APP_CMD_RUN_API_ONLY)
+                    shell_run(
+                        APP_CMD_RUN_API_ONLY + (" -d" if args["daemon"] is True else "")
+                    )
         case "upgrade":
             shell_run(APP_CMD_UPGRADE)
         case "pull":
