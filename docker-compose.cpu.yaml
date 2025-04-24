@@ -10,6 +10,8 @@ services:
       - ollama:/root/.ollama
     networks:
       - ollama-network
+    environment:
+      - OLLAMA_CONTEXT_LENGTH=8192
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
