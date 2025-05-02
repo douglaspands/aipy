@@ -56,6 +56,7 @@ APP_CMD_RUN_WEBUI = f"{APP_CMD_RUN_START} {AI_GUI}"
 APP_CMD_UPGRADE = f"{DOCKER_COMPOSE_INIT} pull"
 APP_CMD_PULL = f"{DOCKER_COMPOSE_EXEC} ollama pull " + "{model}"
 APP_CMD_RM = f"{DOCKER_COMPOSE_EXEC} ollama rm " + "{model}"
+APP_CMD_LOG = f"{DOCKER_COMPOSE_INIT} logs -f"
 CMD_OPEN = (
     "powershell.exe -c 'start {}'"
     if (platform.system() == "Windows" or os.getenv("WSL_DISTRO_NAME"))
@@ -71,7 +72,7 @@ USER_RETRY = 10
 
 def shell_run(
     command: str | list[str], capture_output=False
-) -> subprocess.CompletedProcess[str]:
+) -> subprocess.CompletedProcess[str]:  # type: ignore
     cmd_prefix = f"cd {Path(__file__).resolve().parent}"
     cmd_system = " && ".join(
         [
@@ -298,8 +299,24 @@ def main() -> int | None:
         help=f"initialize chat of the {AI_CORE}{f' (ex.: {local_models_help})' if local_models_help else ''}",
     )
 
+    log_parser = subparsers.add_parser(
+        "log",
+        help="get running log",
+        description="get running log",
+    )
+
+    choice_apps = [AI_CORE, AI_GUI, "all"]
+    log_parser.add_argument(
+        "app",
+        metavar="APP",
+        nargs=1,
+        type=str,
+        choices=choice_apps,
+        help=f"which application would you like to capture the log for? [{', '.join(choice_apps)}]",
+    )
+
     args = parser.parse_args().__dict__
-    # print(f"{args=}")
+    print(f"{args=}")
     match args["subcommand"]:
         case "version":
             print(f"{APP_NAME}-v{APP_VERSION}{extras_help}")
@@ -354,6 +371,14 @@ def main() -> int | None:
                 time.sleep(USER_WAIT_TIME)
                 shell_run(APP_CMD_RUN_CHAT.format(model=model))
                 break
+        case "log":
+            app = list(args.get("app", [])).pop()
+            if app == AI_CORE:
+                shell_run(APP_CMD_LOG + f" {AI_CORE}")
+            elif app == AI_GUI:
+                shell_run(APP_CMD_LOG + f" {AI_GUI}")
+            else:
+                shell_run(APP_CMD_LOG)
 
 
 if __name__ == "__main__":
