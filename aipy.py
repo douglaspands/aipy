@@ -316,7 +316,7 @@ def main() -> int | None:
     )
 
     args = parser.parse_args().__dict__
-    print(f"{args=}")
+    # print(f"{args=}")
     match args["subcommand"]:
         case "version":
             print(f"{APP_NAME}-v{APP_VERSION}{extras_help}")
