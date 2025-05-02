@@ -309,12 +309,14 @@ def main() -> int | None:
             else:
                 print(f"> gpu mode: {'on' if NVIDIA_GPU else 'off'}")
                 time.sleep(USER_WAIT_TIME)
+                thread = None
                 if args.get("with_webui", False) is True:
                     if args.get("open", False) is True:
-                        Thread(
+                        thread = Thread(
                             target=browser_open_url,
                             daemon=True,
-                        ).start()
+                        )
+                        thread.start()
                     shell_run(
                         APP_CMD_RUN_START + (" -d" if args["daemon"] is True else "")
                     )
@@ -322,6 +324,8 @@ def main() -> int | None:
                     shell_run(
                         APP_CMD_RUN_API_ONLY + (" -d" if args["daemon"] is True else "")
                     )
+                if thread:
+                    thread.join()
         case "upgrade":
             shell_run(APP_CMD_UPGRADE)
         case "pull":
