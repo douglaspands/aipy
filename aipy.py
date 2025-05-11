@@ -48,11 +48,12 @@ DOCKER_COMPOSE_DEFAULT = (
 )
 DOCKER_COMPOSE_INIT = f"docker compose -f {DOCKER_COMPOSE_DEFAULT}"
 DOCKER_COMPOSE_EXEC = f"{DOCKER_COMPOSE_INIT} exec {AI_CORE}"
-APP_CMD_RUN_START = f"{DOCKER_COMPOSE_INIT} up"
+APP_CMD_RUN_UP = f"{DOCKER_COMPOSE_INIT} up"
 APP_CMD_RUN_STOP = f"{DOCKER_COMPOSE_INIT} stop"
+APP_CMD_RUN_DOWN = f"{DOCKER_COMPOSE_INIT} down"
 APP_CMD_RUN_CHAT = f"{DOCKER_COMPOSE_EXEC} ollama run " + "{model}"
-APP_CMD_RUN_API_ONLY = f"{APP_CMD_RUN_START} {AI_CORE}"
-APP_CMD_RUN_WEBUI = f"{APP_CMD_RUN_START} {AI_GUI}"
+APP_CMD_RUN_API_ONLY = f"{APP_CMD_RUN_UP} {AI_CORE}"
+APP_CMD_RUN_WEBUI = f"{APP_CMD_RUN_UP} {AI_GUI}"
 APP_CMD_UPGRADE = f"{DOCKER_COMPOSE_INIT} pull"
 APP_CMD_PULL = f"{DOCKER_COMPOSE_EXEC} ollama pull " + "{model}"
 APP_CMD_RM = f"{DOCKER_COMPOSE_EXEC} ollama rm " + "{model}"
@@ -335,7 +336,7 @@ def main() -> int | None:
                         )
                         thread.start()
                     shell_run(
-                        APP_CMD_RUN_START + (" -d" if args["daemon"] is True else "")
+                        APP_CMD_RUN_UP + (" -d" if args["daemon"] is True else "")
                     )
                 else:
                     shell_run(
@@ -345,6 +346,7 @@ def main() -> int | None:
                     thread.join()
         case "upgrade":
             shell_run(APP_CMD_UPGRADE)
+            shell_run(APP_CMD_RUN_DOWN)
         case "pull":
             for model in args.get("model_name") or []:
                 shell_run(APP_CMD_PULL.format(model=model))
