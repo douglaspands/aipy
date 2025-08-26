@@ -12,14 +12,14 @@ services:
       - ollama-network
     environment:
       - OLLAMA_CONTEXT_LENGTH=8192
+    runtime: nvidia      
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
-              capabilities:
-                - gpu
+              count: all
+              capabilities: [gpu]
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:cuda
@@ -40,14 +40,14 @@ services:
       - host.docker.internal:host-gateway
     networks:
       - ollama-network
+    runtime: nvidia 
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
-              capabilities:
-                - gpu
+              count: all
+              capabilities: [gpu]
 
 volumes:
   ollama:
