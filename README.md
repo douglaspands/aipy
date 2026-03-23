@@ -2,7 +2,7 @@
 CLI de apoio para uso do Ollama.
 
 ## Dependencias
-- Python >=3.11,<3.14
+- Python >=3.11
 - Docker >=28.0.2
 - Docker-Compose >=2.34.0
 
@@ -25,6 +25,7 @@ positional arguments:
     list                list model
     open-webui          open open-webui
     chat                ollama's chat
+    ps                  show ollama's process status
 
 options:
   -h, --help            show this help message and exit

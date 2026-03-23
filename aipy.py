@@ -67,6 +67,7 @@ WEBUI_URL = "http://localhost:8080"
 APP_CMD_OPEN_WEBUI = CMD_OPEN.format(shlex.quote(WEBUI_URL))
 APP_CMD_LIST_LOCAL = f"{DOCKER_COMPOSE_EXEC} ollama list"
 APP_CMD_LIST_REMOTE = f"{DOCKER_COMPOSE_EXEC} ollama list all models"
+APP_CMD_PS = f"{DOCKER_COMPOSE_EXEC} ollama ps"
 USER_WAIT_TIME = 2.5
 USER_RETRY = 10
 
@@ -316,6 +317,12 @@ def main() -> int | None:
         help=f"which application would you like to capture the log for? [{', '.join(choice_apps)}]",
     )
 
+    subparsers.add_parser(
+        "ps",
+        help=f"show {AI_CORE}'s process status{ollama_running_help}",
+        description=f"show {AI_CORE}'s process status{ollama_running_help}",
+    )
+
     args = parser.parse_args().__dict__
     # print(f"{args=}")
     match args["subcommand"]:
@@ -381,6 +388,8 @@ def main() -> int | None:
                 shell_run(APP_CMD_LOG + f" {AI_GUI}")
             else:
                 shell_run(APP_CMD_LOG)
+        case "ps":
+            shell_run(APP_CMD_PS)
 
 
 if __name__ == "__main__":
